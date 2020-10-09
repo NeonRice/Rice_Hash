@@ -25,6 +25,28 @@ std::vector<std::string> getChunks(const std::string &input, const unsigned &mod
     return chunks;
 }
 
+inline std::bitset<32> transform(std::bitset<32> *words)
+{
+    return (words[0] ^ words[1] ^ words[2] ^ words[3]) << 1;
+}
+
+void extendWords(std::vector<std::vector<std::string>> words)
+{
+    for (auto &&word : words)
+    {
+        int i = 16;
+        for (size_t i = 16; i <= 79; i++)
+        {
+            std::bitset<32> words[4] = {std::bitset<32>(word[i-3]), std::bitset<32>(word[i-8]),
+             std::bitset<32>(word[i-14]), std::bitset<32>(word[i-16])};
+
+            word.push_back(transform(words).to_string());
+        }
+        std::cout << word[79] << std::endl;
+    }
+    
+}
+
 
 std::string hash(const std::string &input)
 {
@@ -55,10 +77,7 @@ std::string hash(const std::string &input)
 
     for (auto it = words.begin(); it != words.end(); ++it)
     {
-        for (auto it2 = it->begin(); it2 != it->end(); ++it2)
-        {
-            std::cout << *it2 << std::endl;
-        }
+        
     }
 
 }
@@ -76,6 +95,9 @@ std::string manualInput()
 
 int main(int argc, char** argv)
 {
+    /* std::bitset<32> a (std::string("00000000000000000000000000000000")), b (std::string("01000001001000000101010001100101"));
+    std::bitset<32> words[] = {a, a, a, b};
+    std::cout << transform1(words).to_string(); */
     std::string input;
     //Hash here HAHA
     if (argc < 2)
