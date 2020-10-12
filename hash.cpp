@@ -3,6 +3,38 @@
 #include <bitset>
 #include <vector>
 
+template<class T, size_t BITSIZE>
+std::vector<T> getChunks(const std::string &input)
+{
+    std::vector<T> chunks;
+    for (size_t i = 0; i < input.length(); i += BITSIZE)
+        chunks.push_back(T(std::bitset<BITSIZE>(input.substr(i, BITSIZE))));
+    
+    return chunks;
+}
+
+template<size_t BITSIZE>
+struct BitsetObject
+{
+    std::bitset<BITSIZE> value;
+
+    BitsetObject(std::bitset<BITSIZE> val) : value(val) {};
+};
+
+template<size_t BITSIZE>
+struct Chunk : public BitsetObject<BITSIZE>
+{
+    Chunk() {words = getChunks<BitsetObject<BITSIZE/16>, BITSIZE/16>(this->value.to_string());}
+    Chunk(std::bitset<BITSIZE> bitSet) : BitsetObject<BITSIZE>(bitSet) {words = getChunks<BitsetObject<BITSIZE/16>, BITSIZE/16>(this->value.to_string());}
+
+    std::bitset<32> h0 = std::bitset<32>(std::string("01100111010001010010001100000001"));
+    std::bitset<32> h1 = std::bitset<32>(std::string("11101111110011011010101110001001"));
+    std::bitset<32> h2 = std::bitset<32>(std::string("10011000101110101101110011111110"));
+    std::bitset<32> h3 = std::bitset<32>(std::string("00010000001100100101010001110110"));
+    std::bitset<32> h4 = std::bitset<32>(std::string("11000011110100101110000111110000"));
+
+    std::vector<BitsetObject<BITSIZE/16>> words;
+};
 
 std::string padToCongruent(std::string input)
 {
@@ -10,15 +42,6 @@ std::string padToCongruent(std::string input)
         input += "0";
     
     return input;
-}
-
-std::vector<std::string> getChunks(const std::string &input, const unsigned &modifier)
-{
-    std::vector<std::string> chunks;
-    for (size_t i = 0; i < input.length(); i += modifier)
-        chunks.push_back(input.substr(i, modifier));
-    
-    return chunks;
 }
 
 inline std::bitset<32> lrot(std::bitset<32> word, unsigned bit)
@@ -56,18 +79,13 @@ void trans4(std::bitset<32> &f, std::bitset<32> &k, std::bitset<32> *vars)
     k = std::bitset<32>(std::string("11001010011000101100000111010110"));
 }
 
-void transformWords(std::vector<std::string> words)
+template <class T>
+void transformWords(T &chunk)
 {
-    std::bitset<32> h0 = std::bitset<32>(std::string("01100111010001010010001100000001"));
-    std::bitset<32> h1 = std::bitset<32>(std::string("11101111110011011010101110001001"));
-    std::bitset<32> h2 = std::bitset<32>(std::string("10011000101110101101110011111110"));
-    std::bitset<32> h3 = std::bitset<32>(std::string("00010000001100100101010001110110"));
-    std::bitset<32> h4 = std::bitset<32>(std::string("11000011110100101110000111110000"));
-    std::bitset<32> vars[] = {h0, h1, h2, h3, h4};
+    std::bitset<32> vars[] = {chunk.h0, chunk.h1, chunk.h2, chunk.h3, chunk.h4};
 
     for (size_t i = 0; i <= 79; ++i) //Looping through words
     {
-        auto transWord = std::bitset<32>(words[i]);
         std::bitset<32> f, k;
 
         if (i <= 19)
@@ -79,7 +97,7 @@ void transformWords(std::vector<std::string> words)
         else if (i <= 79)
             trans4(f, k, vars);
 
-        std::bitset<32> temp = (lrot(vars[0], 5).to_ullong() + f.to_ullong() + vars[4].to_ullong() + k.to_ullong() + transWord.to_ullong());
+        std::bitset<32> temp = (lrot(vars[0], 5).to_ullong() + f.to_ullong() + vars[4].to_ullong() + k.to_ullong() + chunk.words[i].value.to_ullong());
         vars[4] = vars[3];
         vars[3] = vars[2];
         vars[2] = lrot(vars[1], 30);
@@ -87,31 +105,27 @@ void transformWords(std::vector<std::string> words)
         vars[0] = temp;
     }
 
-    h0 = h0.to_ullong() + vars[0].to_ullong();
-    h1 = h1.to_ullong() + vars[1].to_ullong();
-    h2 = h2.to_ullong() + vars[2].to_ullong();
-    h3 = h3.to_ullong() + vars[3].to_ullong();
-    h4 = h4.to_ullong() + vars[4].to_ullong();
-
-    std::cout << std::hex << h0.to_ullong()  << std::endl;
-    
+    chunk.h0 = chunk.h0.to_ullong() + vars[0].to_ullong();
+    chunk.h1 = chunk.h1.to_ullong() + vars[1].to_ullong();
+    chunk.h2 = chunk.h2.to_ullong() + vars[2].to_ullong();
+    chunk.h3 = chunk.h3.to_ullong() + vars[3].to_ullong();
+    chunk.h4 = chunk.h4.to_ullong() + vars[4].to_ullong();
 }
 
-void extendWords(std::vector<std::string> &words)
+template <class T>
+void extendWords(T &words)
 {
     int i = 16;
     for (size_t i = 16; i <= 79; i++)
     {
-        std::bitset<32> wordArr[4] = {std::bitset<32>(words[i-3]), std::bitset<32>(words[i-8]),
-        std::bitset<32>(words[i-14]), std::bitset<32>(words[i-16])};
-
-        words.push_back(transform(wordArr).to_string());
+        std::bitset<32> wordArr[4] = {words[i-3].value, words[i-8].value,
+        words[i-14].value, words[i-16].value};
+        words.push_back(transform(wordArr));
     }    
 }
 
 std::string hash(const std::string &input)
 {
-    int h0, h1, h2, h3, h4;
     std::string binarifiedString = "";
 
     for (auto it = input.begin(); it != input.end(); ++it)
@@ -127,22 +141,23 @@ std::string hash(const std::string &input)
 
     paddedString += std::bitset<64>(binarifiedString.size() - 1).to_string();
 
-    std::vector<std::string> chunks = getChunks(paddedString, 512);
+    std::vector<Chunk<512>> chunks = getChunks<Chunk<512>, 512>(paddedString); //Processes words aswell as chunks?
     
-    std::vector<std::vector<std::string>> words;
-    
-    for (std::string chunk : chunks)
-    {
-        words.push_back(getChunks(chunk, 32));
-    } 
+    unsigned long long digest[5] = {0,0,0,0,0};
 
     // Proccess each chunk seperately
-    for (auto &&chunk : words)
+    for (auto &&chunk : chunks)
     {
-        extendWords(chunk);
+        extendWords(chunk.words);
         transformWords(chunk);
+        digest[0] += chunk.h0.to_ullong();
+        digest[1] += chunk.h1.to_ullong();
+        digest[2] += chunk.h2.to_ullong();
+        digest[3] += chunk.h3.to_ullong();
+        digest[4] += chunk.h4.to_ullong();
     }
 
+    std::cout << std::hex << digest[0] << digest[1] << digest[2] << digest[3] << digest[4] << std::endl;
 }
 
 std::string manualInput()
