@@ -70,11 +70,11 @@ void transformWords(T &chunk, std::bitset<32> *digest)
         std::bitset<32> temp = (lrot(vars[0], 5).to_ullong() + f.to_ullong() + vars[4].to_ullong() + k.to_ullong() + chunk.words[i].value.to_ullong());
 
         vars[5] = lrot(vars[4], 10) ^ vars[3];
-        vars[6] = lrot(vars[5] | vars[2] | vars[1], 4);
         vars[7] = vars[4].to_ullong() + vars[6].to_ullong() + lrot(f.to_ullong() + k.to_ullong(), 10).to_ullong();
         vars[4] = vars[3];
         vars[3] = vars[2];
         vars[2] = lrot(vars[1], 30);
+        vars[6] = vars[5] | vars[1] ^ vars[2];
         vars[1] = vars[0];
         vars[0] = temp;
     }
