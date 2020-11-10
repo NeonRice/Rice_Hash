@@ -30,7 +30,7 @@ struct Chunk : public BitsetObject<BITSIZE>
 {
     Chunk()
     {
-        words = getChunks<BitsetObject<BITSIZE / 16>, BITSIZE / 16>(this->value.to_string()); 
+        words = getChunks<BitsetObject<BITSIZE / 16>, BITSIZE / 16>(this->value.to_string());
     }
     Chunk(std::bitset<BITSIZE> bitSet) : BitsetObject<BITSIZE>(bitSet)
     {
@@ -118,7 +118,7 @@ std::string hash(const std::string &input)
 
     paddedString += std::bitset<64>(binarifiedString.size() - 1).to_string();
 
-    std::vector<Chunk<512>> chunks = getChunks<Chunk<512>, 512>(paddedString); //Processes words aswell as chunks?
+    std::vector<Chunk<512>> chunks = getChunks<Chunk<512>, 512>(paddedString);
 
     std::bitset<32> h0 = std::bitset<32>(std::string("01100111010001010010001100000001"));
     std::bitset<32> h1 = std::bitset<32>(std::string("11101111110011011010101110001001"));
@@ -129,7 +129,7 @@ std::string hash(const std::string &input)
     std::bitset<32> h6 = std::bitset<32>(std::string("11111000001000000101100010001010"));
     std::bitset<32> h7 = std::bitset<32>(std::string("00000010001000100101010000110010"));
 
-    std::bitset<32> digest[8] = {h0, h1, h2, h3, h4, h5, h6, h7};
+    std::bitset<32> digest[] = {h0, h1, h2, h3, h4, h5, h6, h7};
 
     // Proccess each chunk seperately
     for (auto &&chunk : chunks)
@@ -138,5 +138,5 @@ std::string hash(const std::string &input)
         transformWords(chunk, digest);
     }
 
-    return digestToString(digest);    
+    return digestToString(digest);
 }

@@ -5,6 +5,7 @@
 #include <sstream>
 #include <bitset>
 #include <fstream>
+#include <iomanip>
 
 std::string manualInput()
 {
@@ -19,7 +20,7 @@ std::string manualInput()
 std::string readInput(std::string fileName)
 {
     std::ifstream data(fileName);
-    if(data.fail()) 
+    if (data.fail())
     {
         std::cerr << "|ERROR| Unable to open input file " << fileName << "\nExiting..." << std::endl;
         std::exit(0);
@@ -38,9 +39,11 @@ std::string readInput(std::string fileName)
 std::string digestToString(std::bitset<32> *digest)
 {
     std::stringstream ss;
-    ss << std::hex << digest[0].to_ullong() << digest[1].to_ullong() << digest[2].to_ullong()
-              << digest[3].to_ullong() << digest[4].to_ullong() << digest[5].to_ullong()
-              << digest[6].to_ullong() << digest[7].to_ullong();
+    ss << std::setw(8) << std::setfill('0') << std::hex << digest[0].to_ullong()
+       << std::setw(8) << digest[1].to_ullong() << std::setw(8) << digest[2].to_ullong()
+       << std::setw(8) << digest[3].to_ullong() << std::setw(8) << digest[4].to_ullong()
+       << std::setw(8) << digest[5].to_ullong() << std::setw(8) << digest[6].to_ullong()
+       << std::setw(8) << digest[7].to_ullong();
     return ss.str();
 }
 
